@@ -34,6 +34,26 @@ final class ModeratorsViewModel {
   }
   
   func fetchModerators() {
+    guard !isFetchInProgress else {
+      return
+    }
     
+    isFetchInProgress = true
+    
+    client.fetchModerators(with: request, page: currentPage) { result in
+      switch result {
+      case .failure(let error):
+        DispatchQueue.main.async {
+          self.isFetchInProgress = false
+          self.delegate?.onFetchFailed(with: error.reason)
+        }
+      case .success(let response):
+        DispatchQueue.main.async {
+          self.isFetchInProgress = false
+          self.moderators.append(contentsOf: response.moderators)
+          self.delegate?.onFetchCompleted(with: .none)
+        }
+      }
+    }
   }
 }
